@@ -1,3 +1,4 @@
 # Large Data Files
 *.vcf
 *.gz
+*.tsv
