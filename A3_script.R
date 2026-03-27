@@ -90,7 +90,6 @@ invar_omit <- function(x){
 }
 
 snps_no_invar <- invar_omit(snps_num_t)
-rm(snps_no_invar)
 
 # Scale snps
 snps_scaled <- scale(snps_no_invar)
