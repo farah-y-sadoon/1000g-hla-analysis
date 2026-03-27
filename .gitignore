@@ -2,3 +2,6 @@
 *.vcf
 *.gz
 *.tsv
+
+# System Files
+.DS_Store
