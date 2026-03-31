@@ -304,4 +304,3 @@ c_matrix$byClass['Specificity'] # NA why?
 
 
 ### write functions to do all this again
-
