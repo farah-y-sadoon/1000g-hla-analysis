@@ -225,82 +225,112 @@ ggpubr::ggscatter(data = results_DQA1$scores,
 
 ### Classification
 
-## data in matrix form- Converting the genlight objects to matrices
-
-HLADRB1_matrix <- as.matrix(HLADRB1_filtered_HWE)
-HLADPB1_matrix <- as.matrix(HLADPB1_filtered_HWE)
-HLADQA1_matrix <- as.matrix(HLADQA1_filtered_HWE)
-
-# Load librarues
+# Load libraries
 library(mlbench)
 library(caret)
 library(class)
 library(e1071)
 
-## split into training and test
-
 set.seed(1234)
 
-## turn genlights into dataframes
-# HLADRB1_matrix, HLADRB1_filtered_HWE
-HLADRB1_df <- as.data.frame(cbind(population = as.factor(pop(HLADRB1_filtered_HWE)), HLADRB1_matrix))
+# Function to convert genlights into data frames
+genlight_to_df <- function(hwe_filtered_df) {
+  gene_df <- data.frame(population = as.factor(pop(hwe_filtered_df)), 
+          as.matrix(hwe_filtered_df), check.names = FALSE)
+  return(gene_df)
+}
 
-# HLADPB1_matrix, HLADPB1_filtered_HWE
-HLADPB1_df <- as.data.frame(cbind(population = as.factor(pop(HLADPB1_filtered_HWE)), HLADPB1_matrix))
+# Apply function
+HLADRB1_df <- genlight_to_df(HLADRB1_filtered_HWE)
+HLADPB1_df <- genlight_to_df(HLADPB1_filtered_HWE)
+HLADQA1_df <- genlight_to_df(HLADQA1_filtered_HWE)
+  
+  
+# Remove rows with abnormal population code
+  HLADRB1_df <- HLADRB1_df %>% 
+    filter(!grepl(",", population)) %>%
+    droplevels()
+  
+  HLADPB1_df <-  HLADPB1_df %>% 
+    filter(!grepl(",", population)) %>%
+    droplevels()
+  
+  HLADQA1_df <- HLADQA1_df %>% 
+    filter(!grepl(",", population)) %>%
+    droplevels()
+  
 
-# HLADQA1_matrix, HLADQA1_filtered_HWE
-HLADQA1_df <- as.data.frame(cbind(population = as.factor(pop(HLADPB1_filtered_HWE)), HLADPB1_matrix))
+# split inot test and rtraining daat
+  
+data_split <- function(gene_df){
+  gene_train_index <- createDataPartition(gene_df$population, p = 0.75, list = FALSE)
+  train_data <- gene_df[gene_train_index, ]
+  test_data  <- gene_df[-gene_train_index, ]
+  return(list(index = gene_train_index, training = train_data, test = test_data))
+}
 
-# Split into test and training: HLADRB1
-HLADRB1_train_index <- createDataPartition(HLADRB1_df$population, p = 0.75, list = FALSE)
+# apply function
+HLADRB1_list <- data_split(HLADRB1_df)
+HLADRB1_train <- HLADRB1_list$training
+HLADRB1_test  <- HLADRB1_list$test
 
-train_data <- HLADPB1_df[HLADRB1_train_index, ]
-test_data  <- HLADPB1_df[-HLADRB1_train_index, ]
-
-# Do we have to scale feature?
-#preProc <- preProcess(train_data[, -9], method = c("center", "scale"))
-#train_scaled <- predict(preProc, train_data[, -9])
-#test_scaled  <- predict(preProc, test_data[, -9])
-
+# Apply to other 2 genes...
 
 # CV to choose best k
 
-#We will use caret with 10-fold CV.
 set.seed(123)
 
-control <- trainControl(method = "cv", number = 10)
+# function to select best k for each data
 
-knn_model <- train(population ~ ., data = train_data, method = "knn", trControl = control, tuneLength = 20, preProcess = c("center", "scale"))
+cv_choosek <- function(train_data){
+  control <- trainControl(method = "cv", number = 10)
+  knn_model <- train(population ~ ., data = train_data, method = "knn", trControl = control, tuneLength = 20, preProcess = c("center", "scale"))
+  return(knn_model)
+}
 
-knn_model
-plot(knn_model)
-knn_model$bestTune # best k is 31
+# apply
+HLADRB1_bestk <- cv_choosek(HLADRB1_train)
+plot(HLADRB1_bestk)
+HLADRB1_bestk_results <- HLADRB1_bestk$bestTune$k 
 
-# now do the knn
-k_neighbours <- knn(train = train_data, test = test_data, cl = train_data$population, k = 31)
+# knn function
+
+knn_function <- function(train_data, test_data, bestk){
+  model_train <- train_data[,-1]
+  model_test <- test_data[,-1]
+  k_neighbours <- class::knn(train = model_train, test = model_test, cl = train_data$population, k = bestk)
+  return(k_neighbours)
+}
+
+# apply
+HLADRB1_knnmod <- knn_function(HLADRB1_train, HLADRB1_test, HLADRB1_bestk_results)
+
+#worked
 
 # evaluate model
-# convert to factor
-test_data$population <- as.factor(test_data$population)
-k_neighbours <- as.factor(k_neighbours)
+# convert to factor if needed
+#test_data$population <- as.factor(test_data$population)
+#k_neighbours <- as.factor(k_neighbours)
 
-levels(k_neighbours)
-levels(test_data$population)
+#levels(k_neighbours)
+#levels(test_data$population)
 
-class(k_neighbours)
-class(test_data$population)
+#class(k_neighbours)
+#class(test_data$population)
 
 # had to force labels to be the same so the confusiob matrix would work
-k_neighbours <- factor(k_neighbours, levels = levels(test_data$population))
+#k_neighbours <- factor(k_neighbours, levels = levels(test_data$population))
 
 
-# confusion matrix
-c_matrix <- confusionMatrix(k_neighbours, test_data$population)
+# Confusion matrix
+c_matrix <- confusionMatrix(HLADRB1_knnmod, HLADRB1_test$population)
+
+con_matrix <- table(Predicted = HLADRB1_knnmod, Actual = HLADRB1_test$population)
+print(con_matrix)
 
 
 c_matrix$overall['Accuracy']
 c_matrix$byClass['Sensitivity'] # NA why
 c_matrix$byClass['Specificity'] # NA why?
 
-
-### write functions to do all this again
+# repeat for other genes, write function
