@@ -249,14 +249,17 @@ HLADQA1_df <- genlight_to_df(HLADQA1_filtered_HWE)
 # Remove rows with abnormal population code
   HLADRB1_df <- HLADRB1_df %>% 
     filter(!grepl(",", population)) %>%
+    filter(population %in% pops_of_interest) %>%
     droplevels()
   
   HLADPB1_df <-  HLADPB1_df %>% 
     filter(!grepl(",", population)) %>%
+    filter(population %in% pops_of_interest) %>%
     droplevels()
   
   HLADQA1_df <- HLADQA1_df %>% 
     filter(!grepl(",", population)) %>%
+    filter(population %in% pops_of_interest) %>%
     droplevels()
   
 
@@ -330,7 +333,7 @@ print(con_matrix)
 
 
 c_matrix$overall['Accuracy']
-c_matrix$byClass['Sensitivity'] # NA why
-c_matrix$byClass['Specificity'] # NA why?
+c_matrix$byClass[, 'Sensitivity']
+c_matrix$byClass[, 'Specificity']
 
 # repeat for other genes, write function
