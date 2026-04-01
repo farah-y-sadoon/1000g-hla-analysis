@@ -18,6 +18,10 @@ library(dartR)
 library(NbClust)
 library(cluster)
 library(gridExtra)
+library(mlbench)
+library(caret)
+library(class)
+library(e1071)
 
 # Load Data ----
 
@@ -335,3 +339,142 @@ fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "point
 # EDIT!!! WE COULD ALSO TRY TO PLOT THE POPULATION GROUPS ON TO THESE CLUSTERING FIGURES BUT IDK HOW ####
 
 # CLASSIFICATION: K NEAREST NEIGHBOURS ----
+set.seed(1234)
+
+# Function to convert genlights into data frames
+genlight_to_df <- function(hwe_filtered_df) {
+  gene_df <- data.frame(population = as.factor(pop(hwe_filtered_df)), 
+                        as.matrix(hwe_filtered_df), check.names = FALSE)
+  return(gene_df)
+}
+
+# Apply function
+HLADRB1_df <- genlight_to_df(HLADRB1_filtered_HWE)
+HLADPB1_df <- genlight_to_df(HLADPB1_filtered_HWE)
+HLADQA1_df <- genlight_to_df(HLADQA1_filtered_HWE)
+
+
+# Remove rows with abnormal population code
+HLADRB1_df <- HLADRB1_df %>% 
+  filter(!grepl(",", population)) %>%
+  filter(population %in% pops_of_interest) %>%
+  droplevels()
+
+HLADPB1_df <-  HLADPB1_df %>% 
+  filter(!grepl(",", population)) %>%
+  filter(population %in% pops_of_interest) %>%
+  droplevels()
+
+HLADQA1_df <- HLADQA1_df %>% 
+  filter(!grepl(",", population)) %>%
+  filter(population %in% pops_of_interest) %>%
+  droplevels()
+
+
+# Split into test and trraining data
+
+data_split <- function(gene_df){
+  gene_train_index <- createDataPartition(gene_df$population, p = 0.75, list = FALSE)
+  train_data <- gene_df[gene_train_index, ]
+  test_data  <- gene_df[-gene_train_index, ]
+  return(list(index = gene_train_index, training = train_data, test = test_data))
+}
+
+# Apply function
+HLADRB1_list <- data_split(HLADRB1_df)
+HLADRB1_train <- HLADRB1_list$training
+HLADRB1_test  <- HLADRB1_list$test
+
+HLADPB1_list <- data_split(HLADPB1_df)
+HLADPB1_train <- HLADPB1_list$training
+HLADPB1_test  <- HLADPB1_list$test
+
+HLADQA1_list <- data_split(HLADQA1_df)
+HLADQA1_train <- HLADQA1_list$training
+HLADQA1_test  <- HLADQA1_list$test
+
+# CV to choose best k
+
+set.seed(123)
+
+# Function to select best k for each data
+
+cv_choosek <- function(train_data){
+  control <- trainControl(method = "cv", number = 10)
+  knn_model <- train(population ~ ., data = train_data, method = "knn", trControl = control, tuneLength = 20, preProcess = c("center", "scale"))
+  return(knn_model)
+}
+
+# Apply function
+HLADRB1_bestk <- cv_choosek(HLADRB1_train)
+plot(HLADRB1_bestk)
+HLADRB1_bestk_results <- HLADRB1_bestk$bestTune$k
+
+HLADPB1_bestk <- cv_choosek(HLADPB1_train)
+plot(HLADPB1_bestk)
+HLADPB1_bestk_results <- HLADPB1_bestk$bestTune$k
+
+HLADQA1_bestk <- cv_choosek(HLADQA1_train)
+plot(HLADQA1_bestk)
+HLADQA1_bestk_results <- HLADQA1_bestk$bestTune$k 
+
+# knn function
+
+knn_function <- function(train_data, test_data, bestk){
+  model_train <- train_data[,-1]
+  model_test <- test_data[,-1]
+  k_neighbours <- class::knn(train = model_train, test = model_test, cl = train_data$population, k = bestk)
+  return(k_neighbours)
+}
+
+# Apply function
+HLADRB1_knnmod <- knn_function(HLADRB1_train, HLADRB1_test, HLADRB1_bestk_results)
+HLADPB1_knnmod <- knn_function(HLADPB1_train, HLADPB1_test, HLADPB1_bestk_results)
+HLADQA1_knnmod <- knn_function(HLADQA1_train, HLADQA1_test, HLADQA1_bestk_results)
+
+# evaluate model
+# convert to factor if needed
+#test_data$population <- as.factor(test_data$population)
+#k_neighbours <- as.factor(k_neighbours)
+
+#levels(k_neighbours)
+#levels(test_data$population)
+
+#class(k_neighbours)
+#class(test_data$population)
+
+# had to force labels to be the same so the confusiob matrix would work
+#k_neighbours <- factor(k_neighbours, levels = levels(test_data$population))
+
+# Function to calculate classification performance metrics using confusion matrix
+classification_performance <- function(pred, actual) {
+  
+  # Confusion matrix
+  c_matrix <- confusionMatrix(pred, actual)
+  
+  # Simple table
+  con_matrix <- table(Predicted = pred, Actual = actual)
+  print(con_matrix)
+  
+  # Extract metrics
+  accuracy <- round(c_matrix$overall['Accuracy'],3)
+  sensitivity <- round(c_matrix$byClass[, 'Sensitivity'],3)
+  specificity <- round(c_matrix$byClass[, 'Specificity'],3)
+
+  print(accuracy)
+  print(sensitivity)
+  print(specificity)
+  
+  # Return as a list (useful later if you want a table)
+  return(list(
+    confusion_matrix = con_matrix,
+    accuracy = accuracy,
+    sensitivity = sensitivity,
+    specificity = specificity
+  ))
+}
+
+# Apply function
+metrics_DRB1 <- classification_performance(HLADRB1_knnmod, HLADRB1_test$population)
+metrics_DPB1 <- classification_performance(HLADPB1_knnmod, HLADPB1_test$population)
+metrics_DQA1 <- classification_performance(HLADQA1_knnmod, HLADQA1_test$population)
