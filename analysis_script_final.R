@@ -226,7 +226,7 @@ ggpubr::ggscatter(data = results_DRB1$scores,
                   shape = "pop_id",
                   xlab = paste0("PC1", " [", results_DRB1$var[1], "%", "]"),
                   ylab = paste0("PC2", " [", results_DRB1$var[2], "%", "]"),
-                  main = "B. HLADRB1",
+                  main = "B. HLA-DRB1",
                   legend.title = "Population")
 
 ## HLA-DQA1 ----
@@ -254,7 +254,7 @@ ggpubr::ggscatter(data = results_DQA1$scores,
                   shape = "pop_id",
                   xlab = paste0("PC1", " [", results_DQA1$var[1], "%", "]"),
                   ylab = paste0("PC2", " [", results_DQA1$var[2], "%", "]"),
-                  main = "C. HLADQA1",
+                  main = "C. HLA-DQA1",
                   legend.title = "Population")
 # Look at cumulative variation for first 10 PCs of each gene: 
 cumsum(results_DPB1_2$var)[10]
