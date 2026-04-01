@@ -144,7 +144,7 @@ results_DPB1 <- run_pca(HLADPB1_filtered_HWE, "HLA-DPB1", metadata, pops_of_inte
 screeplot(results_DPB1$pca, 
           npcs = 50,
           ylab = "Relative Importance", 
-          main = "Scree plot - A. DPB1 (Relative Importance)")
+          main = "Scree plot - DPB1 (Relative Importance)")
 
 # Bar plot for PCA with percent variance explained
 barplot(results_DPB1$var,
@@ -186,7 +186,7 @@ screeplot(results_DPB1_2$pca,
 
 # Bar plot for PCA with percent variance explained
 barplot(results_DPB1_2$var,
-        main = "Percent variation Scree plot - HLA-DPB1",
+        main = "A. HLA-DPB1",
         ylab = "Percent variation explained",
         cex.names = 0.96)
 abline(h = 1/results_DPB1_2$n_snps * 100, col = 2, lwd = 2)
@@ -199,22 +199,21 @@ ggpubr::ggscatter(data = results_DPB1_2$scores,
                   shape = "pop_id",
                   xlab = paste0("PC1", " [", results_DPB1_2$var[1], "%", "]"),
                   ylab = paste0("PC2", " [", results_DPB1_2$var[2], "%", "]"),
-                  main = "SNPs PCA Scatterplot for HLA-DPB1")
+                  main = "A. HLA-DPB1",
+                  legend.title = "Population")
 
 ## HLA-DRB1 ----
 results_DRB1 <- run_pca(HLADRB1_filtered_HWE, "HLA-DRB1", metadata, pops_of_interest)
 
-
 # Plot results
 # Scree plot for scaled PCA with relative importance
 screeplot(results_DRB1$pca,
-          npcs = 50,
           ylab = "Relative Importance", 
           main = "Scree plot - B. DRB1 (Relative Importance)")
 
 # Bar plot for PCA with percent variance explained
 barplot(results_DRB1$var,
-        main = "Percent variation Scree plot - HLA-DRB1",
+        main = "B. HLA-DRB1",
         ylab = "Percent variation explained", 
         cex.names = 0.96)
 abline(h = 1/results_DRB1$n_snps * 100, col = 2, lwd = 2)
@@ -227,7 +226,8 @@ ggpubr::ggscatter(data = results_DRB1$scores,
                   shape = "pop_id",
                   xlab = paste0("PC1", " [", results_DRB1$var[1], "%", "]"),
                   ylab = paste0("PC2", " [", results_DRB1$var[2], "%", "]"),
-                  main = "SNPs PCA Scatterplot for HLADRB1")
+                  main = "B. HLADRB1",
+                  legend.title = "Population")
 
 ## HLA-DQA1 ----
 results_DQA1 <- run_pca(HLADQA1_filtered_HWE, "HLA-DQA1", metadata, pops_of_interest)
@@ -236,12 +236,12 @@ results_DQA1 <- run_pca(HLADQA1_filtered_HWE, "HLA-DQA1", metadata, pops_of_inte
 # Scree plot for scaled PCA with relative importance
 screeplot(results_DQA1$pca, 
           ylab = "Relative Importance", 
-          main = "Scree plot - C. DQA1 (Relative Importance)",
+          main = "Scree plot - DQA1 (Relative Importance)",
           cex.names = 0.96)
 
 # Bar plot for PCA with percent variance explained
 barplot(results_DQA1$var,
-        main = "Percent variation Scree plot - HLA-DQA1",
+        main = "C. HLA-DQA1",
         ylab = "Percent variation explained", 
         cex.names = 0.96)
 abline(h = 1/results_DQA1$n_snps * 100, col = 2, lwd = 2)
@@ -254,7 +254,13 @@ ggpubr::ggscatter(data = results_DQA1$scores,
                   shape = "pop_id",
                   xlab = paste0("PC1", " [", results_DQA1$var[1], "%", "]"),
                   ylab = paste0("PC2", " [", results_DQA1$var[2], "%", "]"),
-                  main = "SNPs PCA Scatterplot for HLADQA1")
+                  main = "C. HLADQA1",
+                  legend.title = "Population")
+# Look at cumulative variation for first 10 PCs of each gene: 
+cumsum(results_DPB1_2$var)[10]
+cumsum(results_DRB1$var)[10]
+cumsum(results_DQA1$var)[10]
+ 
 
 # NON-HIERARCHICAL CLUSTERING: K-MEANS ----
 
@@ -263,14 +269,14 @@ find_k <- function(gene_pca_results, gene_name) {
   set.seed(321)
   #1. Use Within-Cluster Sums of Squares (WSS) Visualization Method
   k_elbow_plot <- fviz_nbclust(gene_pca_results$scores[, 1:10], kmeans, method = "wss") +
-    labs(subtitle = glue("Elbow method {gene_name}"))
+    labs(subtitle = glue("{gene_name}"))
   print(k_elbow_plot)
   
   #2. Use Nbclust method
   nbout_gene <- NbClust(gene_pca_results$scores[, 1:10], method = "kmeans")
   k_barplot <- barplot(table(nbout_gene$Best.nc[1,]), ylab = "Indexes", 
                        xlab = "Number of clusters (k)",
-                       main = glue("Optimal Number of Clusters for {gene_name}"))
+                       main = glue("B. {gene_name}"))
   
   #3. Use Gap Statistics
   gapstat_gene <- clusGap(gene_pca_results$scores[, 1:10], 
@@ -321,19 +327,21 @@ fviz_cluster(kmeans_results_DQA1_10PC, data = results_DQA1$scores[, 1:10])
 kmeans_results_DPB1 <- kmeans(results_DPB1_2$scaled_snps, best_k_DPB1$best_k_nbclust, nstart = 10)
 
 # Plot results
-fviz_cluster(kmeans_results_DPB1, data = results_DPB1_2$scaled_snps, geom = "point")
+clust_plot_DPB1 <- fviz_cluster(kmeans_results_DPB1, data = results_DPB1_2$scaled_snps, geom = "point", main = "A. HLA-DPB1")
 
 ### HLA-DRB1 ----
 kmeans_results_DRB1 <- kmeans(results_DRB1$scaled_snps, best_k_DRB1$best_k_nbclust, nstart = 10)
 
 # Plot results
-fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "point")
+clust_plot_DRB1 <- fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "point", main = "A. HLA-DRB1")
 
 ### HLA-DQA1 ----
 kmeans_results_DQA1 <- kmeans(results_DQA1$scaled_snps, best_k_DQA1$best_k_nbclust, nstart = 10)
 
 # Plot results
-fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "point")
+clust_plot_DQA1 <- fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "point", main = "A. HLA-DQA1")
+
+
 
 # EDIT!!! MAKE FIGURES LOOK PRETTY ####
 # EDIT!!! WE COULD ALSO TRY TO PLOT THE POPULATION GROUPS ON TO THESE CLUSTERING FIGURES BUT IDK HOW ####
@@ -350,9 +358,8 @@ genlight_to_df <- function(hwe_filtered_df) {
 
 # Apply function
 HLADRB1_df <- genlight_to_df(HLADRB1_filtered_HWE)
-HLADPB1_df <- genlight_to_df(HLADPB1_filtered_HWE)
+HLADPB1_df <- genlight_to_df(HLADPB1_filtered_HWE) # EDIT!!! Do we want to use the one without the outlier?
 HLADQA1_df <- genlight_to_df(HLADQA1_filtered_HWE)
-
 
 # Remove rows with abnormal population code
 HLADRB1_df <- HLADRB1_df %>% 
@@ -370,9 +377,7 @@ HLADQA1_df <- HLADQA1_df %>%
   filter(population %in% pops_of_interest) %>%
   droplevels()
 
-
-# Split into test and trraining data
-
+# Split into test and training data
 data_split <- function(gene_df){
   gene_train_index <- createDataPartition(gene_df$population, p = 0.75, list = FALSE)
   train_data <- gene_df[gene_train_index, ]
@@ -431,20 +436,6 @@ knn_function <- function(train_data, test_data, bestk){
 HLADRB1_knnmod <- knn_function(HLADRB1_train, HLADRB1_test, HLADRB1_bestk_results)
 HLADPB1_knnmod <- knn_function(HLADPB1_train, HLADPB1_test, HLADPB1_bestk_results)
 HLADQA1_knnmod <- knn_function(HLADQA1_train, HLADQA1_test, HLADQA1_bestk_results)
-
-# evaluate model
-# convert to factor if needed
-#test_data$population <- as.factor(test_data$population)
-#k_neighbours <- as.factor(k_neighbours)
-
-#levels(k_neighbours)
-#levels(test_data$population)
-
-#class(k_neighbours)
-#class(test_data$population)
-
-# had to force labels to be the same so the confusiob matrix would work
-#k_neighbours <- factor(k_neighbours, levels = levels(test_data$population))
 
 # Function to calculate classification performance metrics using confusion matrix
 classification_performance <- function(pred, actual) {
