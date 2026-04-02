@@ -339,7 +339,7 @@ fviz_cluster(kmeans_results_DPB1, data = results_DPB1_2$scaled_snps, geom = "non
 kmeans_results_DRB1 <- kmeans(results_DRB1$scaled_snps, best_k_DRB1$best_k_nbclust, nstart = 10)
 
 # Plot results
-fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "none", main = "A. HLA-DRB1") +
+fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "none", main = "B. HLA-DRB1") +
   labs(colour = "Cluster") +
   geom_point(aes(colour = cluster, 
                  shape = results_DRB1$scores$pop_id),
@@ -351,7 +351,7 @@ fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "none"
 kmeans_results_DQA1 <- kmeans(results_DQA1$scaled_snps, best_k_DQA1$best_k_nbclust, nstart = 10)
 
 # Plot results
-fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "none", main = "A. HLA-DQA1") +
+fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "none", main = "C. HLA-DQA1") +
   labs(colour = "Cluster") +
   geom_point(aes(colour = cluster, 
                  shape = results_DQA1$scores$pop_id),
