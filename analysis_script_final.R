@@ -335,6 +335,26 @@ fviz_cluster(kmeans_results_DPB1, data = results_DPB1_2$scaled_snps, geom = "non
   scale_shape_manual(values = 0:7, breaks = c("CHB", "JPT", "FIN","YRI"), name = "Population") +
   guides(fill = "none")
 
+df_DPB1 <- data.frame(
+  cluster = kmeans_results_DPB1$cluster,
+  population = results_DPB1_2$scores$pop_id
+)
+
+df %>%
+  count(cluster, population) %>%
+  group_by(cluster) %>%
+  mutate(prop = n / sum(n))
+
+ggplot(df_DPB1, aes(x = cluster, fill = population)) +
+  geom_bar(position = "fill") +
+  labs(
+    x = "Cluster",
+    y = "Proportion",
+    fill = "Population",
+    title = "A. Cluster Composition (HLA-DPB1)"
+  ) +
+  theme_minimal()
+
 ### HLA-DRB1 ----
 kmeans_results_DRB1 <- kmeans(results_DRB1$scaled_snps, best_k_DRB1$best_k_nbclust, nstart = 10)
 
@@ -347,6 +367,26 @@ fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "none"
   scale_shape_manual(values = 0:7, breaks = c("CHB", "JPT", "FIN","YRI"), name = "Population") +
   guides(fill = "none")
 
+df_DRB1 <- data.frame(
+  cluster = kmeans_results_DRB1$cluster,
+  population = results_DRB1$scores$pop_id
+)
+
+df_DRB1 %>%
+  count(cluster, population) %>%
+  group_by(cluster) %>%
+  mutate(prop = n / sum(n))
+
+ggplot(df_DRB1, aes(x = cluster, fill = population)) +
+  geom_bar(position = "fill") +
+  labs(
+    x = "Cluster",
+    y = "Proportion",
+    fill = "Population",
+    title = "B. Cluster Composition (HLA-DRB1)"
+  ) +
+  theme_minimal()
+
 ### HLA-DQA1 ----
 kmeans_results_DQA1 <- kmeans(results_DQA1$scaled_snps, best_k_DQA1$best_k_nbclust, nstart = 10)
 
@@ -358,6 +398,26 @@ fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "none"
              size = 2) +
   scale_shape_manual(values = 0:7, breaks = c("CHB", "JPT", "FIN","YRI"), name = "Population") +
   guides(fill = "none")
+
+df_DQA1 <- data.frame(
+  cluster = kmeans_results_DQA1$cluster,
+  population = results_DQA1$scores$pop_id
+)
+
+df_DQA1 %>%
+  count(cluster, population) %>%
+  group_by(cluster) %>%
+  mutate(prop = n / sum(n))
+
+ggplot(df_DQA1, aes(x = cluster, fill = population)) +
+  geom_bar(position = "fill") +
+  labs(
+    x = "Cluster",
+    y = "Proportion",
+    fill = "Population",
+    title = "C. Cluster Composition (HLA-DQA1)"
+  ) +
+  theme_minimal()
 
 # CLASSIFICATION: K NEAREST NEIGHBOURS ----
 set.seed(1234)
