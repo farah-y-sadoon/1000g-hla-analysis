@@ -327,24 +327,37 @@ fviz_cluster(kmeans_results_DQA1_10PC, data = results_DQA1$scores[, 1:10])
 kmeans_results_DPB1 <- kmeans(results_DPB1_2$scaled_snps, best_k_DPB1$best_k_nbclust, nstart = 10)
 
 # Plot results
-clust_plot_DPB1 <- fviz_cluster(kmeans_results_DPB1, data = results_DPB1_2$scaled_snps, geom = "point", main = "A. HLA-DPB1")
+fviz_cluster(kmeans_results_DPB1, data = results_DPB1_2$scaled_snps, geom = "none", main = "A. HLA-DPB1") +
+  labs(color = "Cluster") +
+  geom_point(aes(colour = cluster, 
+                 shape = results_DPB1_2$scores$pop_id),
+             size = 2) +
+  scale_shape_manual(values = 0:7, breaks = c("CHB", "JPT", "FIN","YRI"), name = "Population") +
+  guides(fill = "none")
 
 ### HLA-DRB1 ----
 kmeans_results_DRB1 <- kmeans(results_DRB1$scaled_snps, best_k_DRB1$best_k_nbclust, nstart = 10)
 
 # Plot results
-clust_plot_DRB1 <- fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "point", main = "A. HLA-DRB1")
+fviz_cluster(kmeans_results_DRB1, data = results_DRB1$scaled_snps, geom = "none", main = "A. HLA-DRB1") +
+  labs(colour = "Cluster") +
+  geom_point(aes(colour = cluster, 
+                 shape = results_DRB1$scores$pop_id),
+             size = 2) +
+  scale_shape_manual(values = 0:7, breaks = c("CHB", "JPT", "FIN","YRI"), name = "Population") +
+  guides(fill = "none")
 
 ### HLA-DQA1 ----
 kmeans_results_DQA1 <- kmeans(results_DQA1$scaled_snps, best_k_DQA1$best_k_nbclust, nstart = 10)
 
 # Plot results
-clust_plot_DQA1 <- fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "point", main = "A. HLA-DQA1")
-
-
-
-# EDIT!!! MAKE FIGURES LOOK PRETTY ####
-# EDIT!!! WE COULD ALSO TRY TO PLOT THE POPULATION GROUPS ON TO THESE CLUSTERING FIGURES BUT IDK HOW ####
+fviz_cluster(kmeans_results_DQA1, data = results_DQA1$scaled_snps, geom = "none", main = "A. HLA-DQA1") +
+  labs(colour = "Cluster") +
+  geom_point(aes(colour = cluster, 
+                 shape = results_DQA1$scores$pop_id),
+             size = 2) +
+  scale_shape_manual(values = 0:7, breaks = c("CHB", "JPT", "FIN","YRI"), name = "Population") +
+  guides(fill = "none")
 
 # CLASSIFICATION: K NEAREST NEIGHBOURS ----
 set.seed(1234)
