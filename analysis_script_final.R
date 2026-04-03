@@ -485,16 +485,26 @@ cv_choosek <- function(train_data){
 
 # Apply function
 HLADRB1_bestk <- cv_choosek(HLADRB1_train)
-plot(HLADRB1_bestk)
+plot_HLADRB1 <- plot(HLADRB1_bestk, main = "A. HLA-DRB1  ", xlab = "# of Neighbours")
 HLADRB1_bestk_results <- HLADRB1_bestk$bestTune$k
 
+#Determine accuracy based on best k
+HLADRB1_bestk$results$Accuracy[HLADRB1_bestk$results$k==HLADRB1_bestk_results] #0.4884543
+
 HLADPB1_bestk <- cv_choosek(HLADPB1_train)
-plot(HLADPB1_bestk)
+plot_knn_HLADPB1 <- plot(HLADPB1_bestk, main = "B. HLA-DPB1  ", xlab = "# of Neighbours")
 HLADPB1_bestk_results <- HLADPB1_bestk$bestTune$k
 
+HLADPB1_bestk$results$Accuracy[HLADPB1_bestk$results$k==HLADPB1_bestk_results] #0.7020027
+
 HLADQA1_bestk <- cv_choosek(HLADQA1_train)
-plot(HLADQA1_bestk)
+plot_knn_HLADQA1 <- plot(HLADQA1_bestk, main = "C. HLA-DQA1   ", xlab = "# of Neighbours")
 HLADQA1_bestk_results <- HLADQA1_bestk$bestTune$k 
+
+HLADQA1_bestk$results$Accuracy[HLADQA1_bestk$results$k==HLADQA1_bestk_results] #0.5294358
+
+#Put together plots from above
+plot_together <- grid.arrange(plot_knn_HLADRB1, plot_knn_HLADPB1, plot_knn_HLADQA1, ncol = 3)
 
 # knn function
 
