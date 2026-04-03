@@ -7,11 +7,10 @@ library(vcfR)
 library(readr)
 library(SNPRelate)
 library(HardyWeinberg)
-library(LDlinkR)
+library(stats)
 library(vegan)
 library(ggplot2)
 library(ggpubr)
-library(randomForest)
 library(glue)
 library(factoextra)
 library(dartR)
@@ -94,24 +93,24 @@ PCA_variation <- function(pca_summary, PCs = 2){
 
 # Function to run analysis
 run_pca <- function(snp_data, gene_name, metadata, pops_of_interest) {
-  # 1. Extract the genotype data from the VCF file
+  # 1. Convert the HWE filtered genlight object to a matrix
   snps_num <- as.matrix(snp_data)
   
-  # 2. Transpose → rows = individuals and check data
-  snps_num_t <- as.data.frame(snps_num)
+  # 2. Transform the matrix to a dataframe
+  snps_num_df <- as.data.frame(snps_num)
   
   # 3. Look at NA values 
-  total_NAs <- sum(is.na(snps_num_t))
+  total_NAs <- sum(is.na(snps_num_df))
   print(glue('Number of NAs in {gene_name}: {total_NAs}'))
   
   # 4. Filter for populations of interest
   # Define population names to keep
   pop_lookup <- setNames(metadata$pop, metadata$id)
-  keep <- rownames(snps_num_t)[pop_lookup[rownames(snps_num_t)] %in% pops_of_interest]
-  snps_num_t <- snps_num_t[keep, ]
+  keep <- rownames(snps_num_df)[pop_lookup[rownames(snps_num_df)] %in% pops_of_interest]
+  snps_num_df <- snps_num_df[keep, ]
   
   # 5. Remove invariants
-  snps_no_invar <- invar_omit(snps_num_t)
+  snps_no_invar <- invar_omit(snps_num_df)
   
   # 6. Scale SNPs
   snps_scaled <- scale(snps_no_invar)
